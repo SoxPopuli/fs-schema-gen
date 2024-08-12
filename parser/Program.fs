@@ -14,56 +14,49 @@ module DeeplyNested =
             module Nested4 =
                 module Nested5 =
                     module Nested6 =
-                        type DeeplyNestedRecord = { X : int }
+                        type DeeplyNestedRecord = { X: int }
 
-type RecordType = 
-    { A: int
-    ; B: float
-    ; C: string
-    ; Nested: NestedRecord
-    ; DeeplyNested: DeeplyNested.Nested2.Nested3.Nested4.Nested5.Nested6.DeeplyNestedRecord
-    }
-and NestedRecord = 
-    { X: int }
+type RecordType = {
+    A: int
+    B: float
+    C: string
+    Nested: NestedRecord
+    DeeplyNested: DeeplyNested.Nested2.Nested3.Nested4.Nested5.Nested6.DeeplyNestedRecord
+}
+
+and NestedRecord = { X: int }
 
 type ProjectLoader(projectDir) =
     let dirInfo = DirectoryInfo projectDir
 
-    let toolsPath = 
-        ProjInfo.Init.init dirInfo None
+    let toolsPath = ProjInfo.Init.init dirInfo None
 
     let workspaceLoader = ProjInfo.WorkspaceLoader.Create(toolsPath)
-    let _subscription = workspaceLoader.Notifications.Subscribe (fun msg -> printfn "%A" msg)
 
-    let checker = FSharpChecker.Create(
-        keepAssemblyContents = true
-    )
+    let _subscription =
+        workspaceLoader.Notifications.Subscribe(fun msg -> printfn "%A" msg)
 
-    member _.LoadProjects () =
+    let checker = FSharpChecker.Create(keepAssemblyContents = true)
+
+    member _.LoadProjects() =
         if not dirInfo.Exists then
             failwith $"Directory {projectDir} does not exist"
 
         let solutions = Directory.GetFiles(projectDir, "*.sln")
 
         match solutions with
-        | [| |] ->
+        | [||] ->
             Directory.GetFiles(dirInfo.FullName, "*.fsproj", SearchOption.AllDirectories)
             |> List.ofArray
             |> workspaceLoader.LoadProjects
-        | slns ->
-            slns
-            |> Array.map workspaceLoader.LoadSln
-            |> Seq.concat
+        | slns -> slns |> Array.map workspaceLoader.LoadSln |> Seq.concat
 
     static member ConvertProjectOptions options =
-        options
-        |> ProjInfo.FCS.mapManyOptions
-        |> Seq.toArray
+        options |> ProjInfo.FCS.mapManyOptions |> Seq.toArray
 
-    member _.ParseAndCheckProject (options: FSharpProjectOptions) =
-        checker.ParseAndCheckProject(options)
+    member _.ParseAndCheckProject(options: FSharpProjectOptions) = checker.ParseAndCheckProject(options)
 
-    member this.ParseAndCheckProject (options: ProjInfo.Types.ProjectOptions, ?knownProjects) =
+    member this.ParseAndCheckProject(options: ProjInfo.Types.ProjectOptions, ?knownProjects) =
         let knownProjects = defaultArg knownProjects Seq.empty
 
         options
@@ -87,47 +80,36 @@ type MultiValueDictionary<'Key, 'Value when 'Key: equality>() =
             list.Add value
             this[key] <- list
 
-type EntityLoader( checkData: FSharpCheckProjectResults ) = class 
-    // Cache looked up entities to speed up recall
-    let entityCache = MultiValueDictionary<string, FSharpEntity>()
+type EntityLoader(checkData: FSharpCheckProjectResults) =
+    class
+        // Cache looked up entities to speed up recall
+        let entityCache = MultiValueDictionary<string, FSharpEntity>()
 
-    member _.FindEntityByPath(path: string seq) =
-        checkData.AssemblySignature.FindEntityByPath(path |> Seq.toList)
+        member _.FindEntityByPath(path: string seq) =
+            checkData.AssemblySignature.FindEntityByPath(path |> Seq.toList)
 
-    member this.FindEntityByPath([<ParamArray>] path) =
-        path
-        |> Array.toSeq
-        |> this.FindEntityByPath
-end
+        member this.FindEntityByPath([<ParamArray>] path) =
+            path |> Array.toSeq |> this.FindEntityByPath
+    end
 
 let _ =
     let p = ProjectLoader("")
-    let projects = 
-        p.LoadProjects()
-        |> p.ParseAndCheckProjects
-        |> Async.RunSynchronously
+    let projects = p.LoadProjects() |> p.ParseAndCheckProjects |> Async.RunSynchronously
 
-    let loaders =
-        projects
-        |> Array.map EntityLoader
+    let loaders = projects |> Array.map EntityLoader
 
     let loader = loaders[0]
 
     loader.FindEntityByPath("a", "b")
 
 module Array =
-    let mapSecond fn x =
-        x |> Array.map (fun (a, b) -> a, fn b)
+    let mapSecond fn x = x |> Array.map (fun (a, b) -> a, fn b)
 
 let getProjectOptions options =
-    options
-    |> ProjInfo.FCS.mapManyOptions
-    |> Seq.toArray
+    options |> ProjInfo.FCS.mapManyOptions |> Seq.toArray
 
 let getAST dirPath =
-    let checker = FSharpChecker.Create(
-        keepAssemblyContents = true
-    )
+    let checker = FSharpChecker.Create(keepAssemblyContents = true)
 
     let info = DirectoryInfo(dirPath)
 
@@ -136,14 +118,11 @@ let getAST dirPath =
     else
         let loader = ProjectLoader dirPath
 
-        let options = 
-            loader.LoadProjects()
-            |> ProjInfo.FCS.mapManyOptions
-            |> Seq.toArray
+        let options = loader.LoadProjects() |> ProjInfo.FCS.mapManyOptions |> Seq.toArray
 
         let projectResults =
-            options 
-            |> Seq.map (fun o -> checker.ParseAndCheckProject o )
+            options
+            |> Seq.map (fun o -> checker.ParseAndCheckProject o)
             |> Async.Parallel
             |> Async.RunSynchronously
 
@@ -154,15 +133,16 @@ let getAST dirPath =
             |> Array.head
             |> (fun x -> x.FSharpFields)
 
-        let parseResults, checkResults = 
+        let parseResults, checkResults =
             projectResults
             |> Array.indexed
-            |> Array.mapSecond (fun r -> 
+            |> Array.mapSecond (fun r ->
                 let files = r.AssemblyContents.ImplementationFiles
                 files |> List.map _.FileName
             )
-            |> Seq.map (fun (i, names) -> 
-                names |> Seq.map (fun name -> checker.GetBackgroundCheckResultsForFileInProject(name, options[i]))
+            |> Seq.map (fun (i, names) ->
+                names
+                |> Seq.map (fun name -> checker.GetBackgroundCheckResultsForFileInProject(name, options[i]))
             )
             |> Seq.concat
             |> Async.Parallel
@@ -176,9 +156,7 @@ let getAST dirPath =
             |> Array.head
             |> (fun x -> x.FSharpFields)
 
-        let syntaxTrees = 
-            parseResults
-            |> Array.map _.ParseTree
+        let syntaxTrees = parseResults |> Array.map _.ParseTree
 
         syntaxTrees |> printfn "Syntax: %A"
 
@@ -187,8 +165,5 @@ let getAST dirPath =
 [<EntryPoint>]
 let main _ =
     let asts = getAST "."
-
     printfn "%A" (asts[0])
-
-
     0
