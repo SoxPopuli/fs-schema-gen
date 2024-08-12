@@ -1,0 +1,7 @@
+[package]
+name = "fs-schema-gen"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+netcorehost = { version = "0.17.0", features = ["net8_0", "net7_0", "net6_0"] }
