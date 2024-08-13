@@ -41,11 +41,6 @@ let rec get (x: FSharpType) =
         let recordName = x.TypeDefinition.DisplayName
 
         Record(recordName, fields)
-    else if x.HasTypeDefinition && x.TypeDefinition.IsArrayType then
-        x.GenericArguments
-        |> Seq.head
-        |> get
-        |> Array
     else
         let typeName = 
             try x.ErasedType.BasicQualifiedName with
@@ -74,3 +69,5 @@ let rec get (x: FSharpType) =
             eprintfn "Unrecognised: %A" typeName
             Other x
 
+let fromEntity (x: FSharpEntity) =
+    x.AsType () |> get

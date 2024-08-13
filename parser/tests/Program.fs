@@ -52,7 +52,7 @@ let projectTests =
 
             //      printfn $"{f.Name}: {f.FieldType.BasicQualifiedName}<{args}>"
 
-            record.AsType() |> ItemType.get |> printfn "%A"
+            record |> ItemType.fromEntity |> printfn "%A"
         }
 
         test "balance tracker entities" {
