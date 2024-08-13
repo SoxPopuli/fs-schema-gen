@@ -9,6 +9,17 @@
         "cwd": "${workspaceFolder}",
         "stopAtEntry": false,
         "console": "internalConsole"
+    },
+    {
+        "name": "run tests",
+        "type": "coreclr",
+        "request": "launch",
+        "preLaunchTask": "build",
+        "program": "${workspaceFolder}/tests/bin/Debug/net8.0/tests.dll",
+        "cwd": "${workspaceFolder}",
+        "stopAtEntry": false,
+        "console": "internalConsole",
+        "justMyCode": false,
     }
     ]
 }
