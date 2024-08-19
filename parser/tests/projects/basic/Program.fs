@@ -16,6 +16,7 @@ type RecordType = {
     List: int list
     Array: int array
     Tuple: (int * float)
+    Dictionary: System.Collections.Generic.Dictionary<int, string>
     Opt: int option
     Res: Result<int, string>
     Nested: NestedRecord option

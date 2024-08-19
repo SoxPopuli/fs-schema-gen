@@ -4,6 +4,8 @@ open Parser
 
 open System.Runtime.CompilerServices
 
+open type ItemType.t
+
 type ProjectPath =
     static member sourcePath([<CallerFilePath>] ?path: string) = Option.get path
 
@@ -32,61 +34,39 @@ let getAllEntities dir =
 [<Tests>]
 let projectTests =
     testList "Project Tests" [
-        ftest "load basic project" {
+        test "load basic project" {
             let loader = ProjectPath.basic () |> ProjectLoader
 
             let project = loader.LoadUniqueProjects() |> Seq.head
 
             let entityLoader = project |> EntityLoader.FromProjectOptions loader
 
+            let expected =
+                Record(
+                    "RecordType",
+                    [
+                        ("A", Int32)
+                        ("B", Float)
+                        ("C", String)
+                        ("D", Float)
+                        ("E", Decimal)
+                        ("F", Bool)
+                        ("List", List Int32)
+                        ("Array", Array Int32)
+                        ("Tuple", Tuple [ Int32; Float ])
+                        ("Dictionary", Dictionary( Int32, String))
+                        ("Opt", Option Int32)
+                        ("Res", Result(Int32, String))
+                        ("Nested", Option(Record("NestedRecord", [ ("X", Int32) ])))
+                        ("DeeplyNested", Record("DeeplyNestedRecord", [ ("X", Int32) ]))
+                        ("Anonymous", AnonymousRecord [ ("Anon", Int32); ("B", String); ("Second", Float) ])
+                    ]
+                )
+
             let record =
                 entityLoader.FindEntityByPath [| "Program"; "RecordType" |] |> Option.get
 
-            let ctx = FSharp.Compiler.Symbols.FSharpDisplayContext.Empty.WithShortTypeNames true
-
-            //  for f in record.FSharpFields do
-            //      let args =
-            //          f.FieldType.GenericArguments
-            //          |> Seq.map (fun f -> f.Format ctx)
-            //          |> (fun x -> System.String.Join(", ", x))
-
-            //      printfn $"{f.Name}: {f.FieldType.BasicQualifiedName}<{args}>"
-
-            record |> ItemType.fromEntity |> printfn "%A"
-        }
-
-        test "balance tracker entities" {
-            let home = System.Environment.GetEnvironmentVariable "HOME"
-
-            let loader = $"{home}/Documents/Work/OpenBanking.BalanceTracker" |> ProjectLoader
-
-            let el =
-                loader.LoadUniqueProjects()
-                |> Seq.find (fun p -> p.ProjectFileName.Contains "BalanceTracker")
-                |> EntityLoader.FromProjectOptions loader
-
-            let e =
-                el.FindEntityByPath [| "Lambda"; "ResponseDTOs"; "MainPage"; "PreferredAccountDataV3DTO" |]
-            //el.FindEntityByPath [| "Lambda"; "RequestDTOs"; "GetDashboardData" |]
-
-            let e = Option.get e
-
-            e.AsType() |> ItemType.get |> printfn "%A"
-
-            ()
-
-        //  let projectEntities = getAllEntities $"{home}/Documents/Work/OpenBanking.BalanceTracker"
-        //  for (p, e) in projectEntities do
-        //      printfn $"━━━ {p} ━━━━━━━━━━━━━"
-        //      for entity in e do
-        //          let entityName =
-        //              entity.TryGetFullName ()
-        //              |> Option.orElse (entity.TryGetFullDisplayName ())
-        //              |> Option.defaultWith entity.ToString
-        //          let entityType =
-        //              entity.AsType ()
-        //          printfn $"\t{entityName}: {entityType}"
-
+            record |> ItemType.fromEntity |> Expect.equal "" expected
         }
     ]
 

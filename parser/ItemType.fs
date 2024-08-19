@@ -4,6 +4,7 @@ open FSharp.Compiler.Symbols
 type t =
     | List of t
     | Array of t
+    | Dictionary of Key: t * Value: t
     | Option of t
     | Result of Ok: t * Error: t
     | Int8
@@ -45,7 +46,7 @@ let rec get (x: FSharpType) =
         let typeName = 
             try x.ErasedType.BasicQualifiedName with
             | :? System.InvalidOperationException -> x.BasicQualifiedName
-        //printfn "%A := %A" x.BasicQualifiedName (x.StripAbbreviations().BasicQualifiedName)
+
         match typeName with
         | "System.Int8" -> Int8
         | "System.Int16" -> Int16
@@ -61,6 +62,9 @@ let rec get (x: FSharpType) =
         | "Microsoft.FSharp.Core.array`1" ->
             x |> getArg |> Array
         | "Microsoft.FSharp.Collections.FSharpList`1" -> x |> getArg |> List
+        | "System.Collections.Generic.Dictionary`2" ->
+            let args = x.GenericArguments
+            Dictionary(get args[0], get args[1])
         | "Microsoft.FSharp.Core.FSharpOption`1" -> x |> getArg |> Option
         | "Microsoft.FSharp.Core.FSharpResult`2" ->
             let args = x.GenericArguments

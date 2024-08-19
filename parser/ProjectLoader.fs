@@ -4,7 +4,7 @@ open Ionide
 open System.IO
 open FSharp.Compiler.CodeAnalysis
 
-type ProjectLoader(projectPath) =
+type ProjectLoader(projectPath, ?printNotifications) =
     let dirInfo = DirectoryInfo projectPath
 
     let toolsPath = ProjInfo.Init.init dirInfo None
@@ -12,7 +12,12 @@ type ProjectLoader(projectPath) =
     let workspaceLoader = ProjInfo.WorkspaceLoader.Create(toolsPath)
 
     let _subscription =
-        workspaceLoader.Notifications.Subscribe(fun msg -> printfn "%A" msg)
+        match printNotifications with
+        | Some true -> workspaceLoader.Notifications.Subscribe(fun msg -> printfn "%A" msg)
+        | _ ->
+            { new System.IDisposable with
+                member _.Dispose() = ()
+            }
 
     let checker = FSharpChecker.Create(keepAssemblyContents = true)
 
