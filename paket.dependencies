@@ -5,3 +5,4 @@ nuget Expecto
 nuget FSharp.Compiler.Service
 nuget Ionide.ProjInfo
 nuget Ionide.ProjInfo.FCS
+nuget Tomlyn

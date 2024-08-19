@@ -77,3 +77,4 @@ NUGET
     System.Security.Cryptography.ProtectedData (8.0) - restriction: || (&& (>= net472) (>= net6.0)) (>= net8.0)
     System.Security.Principal.Windows (5.0) - restriction: >= net6.0
     System.Threading.Tasks.Dataflow (8.0.1) - restriction: || (&& (>= net472) (>= net6.0)) (>= net8.0)
+    Tomlyn (0.17)
