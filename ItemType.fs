@@ -1,4 +1,5 @@
 module Parser.ItemType
+
 open FSharp.Compiler.Symbols
 
 type t =
@@ -24,10 +25,11 @@ type t =
     | Other of FSharpType
 
 let rec get (x: FSharpType) =
-    let getArg (x: FSharpType) =
-        x.GenericArguments
-        |> Seq.head
-        |> get
+    let getArg (x: FSharpType) = x.GenericArguments[0] |> get
+
+    let getArgPair (x: FSharpType) =
+        let args = x.GenericArguments
+        (get args[0], get args[1])
 
     if x.IsAnonRecordType then
         let fieldNames = x.AnonRecordTypeDetails.SortedFieldNames
@@ -43,9 +45,11 @@ let rec get (x: FSharpType) =
 
         Record(recordName, fields)
     else
-        let typeName = 
-            try x.ErasedType.BasicQualifiedName with
-            | :? System.InvalidOperationException -> x.BasicQualifiedName
+        let typeName =
+            try
+                x.ErasedType.BasicQualifiedName
+            with :? System.InvalidOperationException ->
+                x.BasicQualifiedName
 
         match typeName with
         | "System.Int8" -> Int8
@@ -59,19 +63,13 @@ let rec get (x: FSharpType) =
         | "System.Object" -> Object
         | "System.DateTime" -> DateTime
         | "System.Guid" -> Guid
-        | "Microsoft.FSharp.Core.array`1" ->
-            x |> getArg |> Array
+        | "Microsoft.FSharp.Core.array`1" -> x |> getArg |> Array
         | "Microsoft.FSharp.Collections.FSharpList`1" -> x |> getArg |> List
-        | "System.Collections.Generic.Dictionary`2" ->
-            let args = x.GenericArguments
-            Dictionary(get args[0], get args[1])
         | "Microsoft.FSharp.Core.FSharpOption`1" -> x |> getArg |> Option
-        | "Microsoft.FSharp.Core.FSharpResult`2" ->
-            let args = x.GenericArguments
-            Result(get args[0], get args[1])
+        | "System.Collections.Generic.Dictionary`2" -> x |> getArgPair |> Dictionary
+        | "Microsoft.FSharp.Core.FSharpResult`2" -> x |> getArgPair |> Result
         | _ ->
             eprintfn "Unrecognised: %A" typeName
             Other x
 
-let fromEntity (x: FSharpEntity) =
-    x.AsType () |> get
+let fromEntity (x: FSharpEntity) = x.AsType() |> get

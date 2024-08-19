@@ -54,7 +54,7 @@ let projectTests =
                         ("List", List Int32)
                         ("Array", Array Int32)
                         ("Tuple", Tuple [ Int32; Float ])
-                        ("Dictionary", Dictionary( Int32, String))
+                        ("Dictionary", Dictionary(Int32, String))
                         ("Opt", Option Int32)
                         ("Res", Result(Int32, String))
                         ("Nested", Option(Record("NestedRecord", [ ("X", Int32) ])))
