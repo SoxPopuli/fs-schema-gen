@@ -1,0 +1,19 @@
+# Example config for testing
+
+[[endpoint]]
+# Required
+input = "Handlers.InputType"
+output = "Response.OutputType"
+
+# Optional
+json = { case = "snake" , keep_nulls = true }
+
+# Override type information for specific fields
+# e.g. change a type from `obj` to `X`
+overrides.input = { First = "OtherType", Second.Child = "bob", Third.A.B = "thing" }
+overrides.output = { X = "int" }
+
+[[endpoint]]
+# Required
+input = "Handlers.InputTypeTwo"
+output = "Response.OutputTypeTwo"

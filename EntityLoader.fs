@@ -18,7 +18,7 @@ type MultiValueDictionary<'Key, 'Value when 'Key: equality>() =
 
 type EntityLoader(checkData: FSharpCheckProjectResults) =
     // Cache looked up entities to speed up recall
-    let entityCache = MultiValueDictionary<string, FSharpEntity>()
+    // let entityCache = MultiValueDictionary<string, FSharpEntity>()
 
     static member FromProjectOptions (loader: ProjectLoader) (options: ProjInfo.Types.ProjectOptions) =
         options

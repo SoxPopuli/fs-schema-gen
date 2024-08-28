@@ -4,21 +4,25 @@ open Parser
 
 open System.Runtime.CompilerServices
 
-open type ItemType.t
+open type ItemType.ItemType
 
-type ProjectPath =
+type DataPath =
     static member sourcePath([<CallerFilePath>] ?path: string) = Option.get path
 
-module ProjectPath =
+module DataPath =
     open System.IO
 
-    let projectDir () =
-        ProjectPath.sourcePath () |> Directory.GetParent |> _.FullName
+    let rootDir () =
+        DataPath.sourcePath () |> Directory.GetParent |> _.FullName
 
     let basic () =
-        let root = projectDir ()
+        let root = rootDir ()
 
         Path.Join(root, "projects", "basic")
+
+    let testConfig () =
+        let root = rootDir ()
+        Path.Join(root, "projects", "test_config.toml")
 
 let getAllEntities dir =
     let loader = ProjectLoader dir
@@ -35,7 +39,7 @@ let getAllEntities dir =
 let projectTests =
     testList "Project Tests" [
         test "load basic project" {
-            let loader = ProjectPath.basic () |> ProjectLoader
+            let loader = DataPath.basic () |> ProjectLoader
 
             let project = loader.LoadUniqueProjects() |> Seq.head
 
@@ -67,6 +71,20 @@ let projectTests =
                 entityLoader.FindEntityByPath [| "Program"; "RecordType" |] |> Option.get
 
             record |> ItemType.fromEntity |> Expect.equal "" expected
+        }
+    ]
+
+[<Tests>]
+let configTests =
+    testList "Config Tests" [
+        test "load test config" {
+            let config = DataPath.testConfig()
+            let configText = System.IO.File.ReadAllText config
+
+            let endpoints = Config.parseToml configText |> Seq.toArray
+
+            printfn "%A" endpoints
+            ()
         }
     ]
 

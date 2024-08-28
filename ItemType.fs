@@ -2,12 +2,12 @@ module Parser.ItemType
 
 open FSharp.Compiler.Symbols
 
-type t =
-    | List of t
-    | Array of t
-    | Dictionary of Key: t * Value: t
-    | Option of t
-    | Result of Ok: t * Error: t
+type ItemType =
+    | List of ItemType
+    | Array of ItemType
+    | Dictionary of Key: ItemType * Value: ItemType
+    | Option of ItemType
+    | Result of Ok: ItemType * Error: ItemType
     | Int8
     | Int16
     | Int32
@@ -19,9 +19,9 @@ type t =
     | Object
     | DateTime
     | Guid
-    | Record of Name: string * Fields: (string * t) list
-    | AnonymousRecord of (string * t) list
-    | Tuple of t list
+    | Record of Name: string * Fields: (string * ItemType) list
+    | AnonymousRecord of (string * ItemType) list
+    | Tuple of ItemType list
     | Other of FSharpType
 
 let rec get (x: FSharpType) =
