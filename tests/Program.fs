@@ -5,6 +5,7 @@ open Parser
 open System.Runtime.CompilerServices
 
 open type ItemType.ItemType
+open type TypeTree.TypeTree
 
 type DataPath =
     static member sourcePath([<CallerFilePath>] ?path: string) = Option.get path
@@ -35,14 +36,18 @@ let getAllEntities dir =
         name, el.FindAll()
     )
 
+let loadBasicProject () =
+    let loader = DataPath.basic () |> ProjectLoader
+    let project = loader.LoadUniqueProjects() |> Seq.head
+    project |> EntityLoader.FromProjectOptions loader
+
+
 [<Tests>]
 let projectTests =
     testList "Project Tests" [
         test "load basic project" {
             let loader = DataPath.basic () |> ProjectLoader
-
             let project = loader.LoadUniqueProjects() |> Seq.head
-
             let entityLoader = project |> EntityLoader.FromProjectOptions loader
 
             let expected =
@@ -84,6 +89,29 @@ let configTests =
             let endpoints = Config.parseToml configText |> Seq.toArray
 
             printfn "%A" endpoints
+            ()
+        }
+    ]
+
+[<Tests>]
+let overrideTests =
+    testList "Override Tests" [
+        test "" {
+            let loader = loadBasicProject ()
+
+            let baseObject = 
+                loader.FindEntityByPath [| "Program"; "OverrideTypes"; "Base" |]
+                |> Option.map ItemType.fromEntity
+
+            let overrides: TypeTree.TypeTree =
+                Branch ("Base", [
+                    Leaf ("A", Int32)
+                    Leaf ("B", String)
+                    Leaf ("C", Float)
+                ])
+
+            printfn $"{baseObject}"
+
             ()
         }
     ]

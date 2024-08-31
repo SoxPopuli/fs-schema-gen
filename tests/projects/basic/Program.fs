@@ -26,3 +26,11 @@ type RecordType = {
 
 and NestedRecord = { X: int }
 
+
+//
+module OverrideTypes =
+    type Base =
+        { A: obj
+        ; B: obj
+        ; C: obj
+        }

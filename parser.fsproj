@@ -6,12 +6,12 @@
     <WarningsAsErrors>FS0025</WarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="TypeTree.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="ProjectLoader.fs" />
     <Compile Include="EntityLoader.fs" />
     <Compile Include="ItemType.fs" />
+    <Compile Include="TypeTree.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
