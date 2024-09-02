@@ -82,11 +82,12 @@ let projectTests =
 [<Tests>]
 let configTests =
     testList "Config Tests" [
-        test "load test config" {
-            let config = DataPath.testConfig()
+        ptest "load test config" {
+            let loader = loadBasicProject ()
+            let config = DataPath.testConfig ()
             let configText = System.IO.File.ReadAllText config
 
-            let endpoints = Config.parseToml configText |> Seq.toArray
+            let endpoints = Config.parseToml loader configText |> Seq.toArray
 
             printfn "%A" endpoints
             ()
@@ -99,16 +100,12 @@ let overrideTests =
         test "" {
             let loader = loadBasicProject ()
 
-            let baseObject = 
+            let baseObject =
                 loader.FindEntityByPath [| "Program"; "OverrideTypes"; "Base" |]
                 |> Option.map ItemType.fromEntity
 
             let overrides: TypeTree.TypeTree =
-                Branch ("Base", [
-                    Leaf ("A", Int32)
-                    Leaf ("B", String)
-                    Leaf ("C", Float)
-                ])
+                Branch("Base", [ Leaf("A", Int32); Leaf("B", String); Leaf("C", Float) ])
 
             printfn $"{baseObject}"
 

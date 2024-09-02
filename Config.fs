@@ -4,8 +4,9 @@ open Tomlyn
 open Tomlyn.Syntax
 open Tomlyn.Model
 open System.Collections.Generic
+open Utils
 
-open TypeTree
+type TypeTree = TypeTree.TypeTree
 
 type JsonOptions = {
     Case: CaseType option
@@ -37,11 +38,11 @@ let private tryGet key (dict: #IDictionary<'a, 'b>) =
 module private Obj =
     let asString (x: obj) = x :?> string
 
-    let asTable (x: obj) = x :?> TomlTable
+    let asTable (x: obj) = x :?> Utils.Table
 
     let asBool (x: obj) = x :?> bool
 
-let private parseJson (model: TomlTable) =
+let private parseJsonEntry (model: #Table) =
     let allowedCases = Map [ "snake", Snake; "camel", Camel; "pascal", Pascal ]
 
     let getCaseType case =
@@ -61,13 +62,18 @@ let private parseJson (model: TomlTable) =
         KeepNulls = keepNulls
     }
 
-let private parseOverrides (model: TomlTable) =
-    let inputs = 
-        model 
-        |> tryGet "input" 
-        |> Option.map (Obj.asTable >> TypeTree.fromTable)
+let private parseOverrides entityLoader (model: #Table) =
+    let inputs =
+        model
+        |> tryGet "input"
+        |> Option.map Obj.asTable
+        |> Option.map (TypeTree.fromTable entityLoader "input")
 
-    let outputs = model |> tryGet "output" |> Option.map (Obj.asTable >> TypeTree.fromTable)
+    let outputs =
+        model
+        |> tryGet "output"
+        |> Option.map Obj.asTable
+        |> Option.map (TypeTree.fromTable entityLoader "output")
 
     {
         Overrides.Input = inputs
@@ -75,15 +81,17 @@ let private parseOverrides (model: TomlTable) =
     }
 
 
-let private parseEndpoint (model: #IDictionary<string, obj>) =
+let private parseEndpoint entityLoader (model: #Table) =
     let input = model["input"] :?> string
 
     let output = model["output"] :?> string
 
-    let json = model |> tryGet "json" |> Option.map (Obj.asTable >> parseJson)
+    let json = model |> tryGet "json" |> Option.map (Obj.asTable >> parseJsonEntry)
 
     let overrides =
-        model |> tryGet "overrides" |> Option.map (Obj.asTable >> parseOverrides)
+        model
+        |> tryGet "overrides"
+        |> Option.map (Obj.asTable >> parseOverrides entityLoader)
 
     {
         Input = input
@@ -92,9 +100,9 @@ let private parseEndpoint (model: #IDictionary<string, obj>) =
         Overrides = overrides
     }
 
-let parseToml (data: string) =
+let parseToml entityLoader (data: string) =
     let model = data |> Toml.Parse |> Toml.ToModel
 
     model["endpoint"] :?> TomlTableArray
     |> Seq.map Dictionary
-    |> Seq.map parseEndpoint
+    |> Seq.map (parseEndpoint entityLoader)

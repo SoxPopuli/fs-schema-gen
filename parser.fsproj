@@ -7,11 +7,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Utils.fs" />
-    <Compile Include="Config.fs" />
     <Compile Include="ProjectLoader.fs" />
     <Compile Include="EntityLoader.fs" />
     <Compile Include="ItemType.fs" />
     <Compile Include="TypeTree.fs" />
+    <Compile Include="Config.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />

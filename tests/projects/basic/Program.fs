@@ -21,16 +21,15 @@ type RecordType = {
     Res: Result<int, string>
     Nested: NestedRecord option
     DeeplyNested: DeeplyNested.Nested2.Nested3.Nested4.Nested5.Nested6.DeeplyNestedRecord
-    Anonymous: {| Anon: int; Second: float; B: string |}
+    Anonymous: {|
+        Anon: int
+        Second: float
+        B: string
+    |}
 }
 
 and NestedRecord = { X: int }
 
 
-//
 module OverrideTypes =
-    type Base =
-        { A: obj
-        ; B: obj
-        ; C: obj
-        }
+    type Base = { A: obj; B: obj; C: obj }
